@@ -1,0 +1,41 @@
+# Thumbnail cache files
+._*
+Thumbs.db
+*.DS_Store
+Desktop.ini
+
+# Files that might appear on external disks
+.Spotlight-V100
+.Trashes
+
+Icon?
+
+.vscode
+
+# Byte-compiled / optimized / DLL files
+*.pyc
+__pycache__
+*.py[cod]
+*$py.class
+
+# R output files
+*.Rhistory
+*.Rapp.history
+*Rplots.pdf
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# No simulation outputs except R code
+/simulation_output/**/*.*
+!/simulation_output/*.R
