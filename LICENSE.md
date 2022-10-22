@@ -619,9 +619,9 @@ to attach them to the start of each source file to most effectively
 state the exclusion of warranty; and each file should have at least
 the “copyright” line and a pointer to where the full notice is found.
 
-    BACE—Bayesian Adaptive Choice Experiments
+    BACE — Bayesian Adaptive Choice Experiments
     BACE allows researchers to elicit preferences quickly and efficiently using a dynamic experimental framework.
-    Copyright (C) 2022 Marshall Drake, Neil Thakral, and Linh T. Tô
+    Copyright (C) 2022  Marshall Drake, Neil Thakral, and Linh T. Tô
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
