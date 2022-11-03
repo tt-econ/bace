@@ -14,7 +14,7 @@ Computing the most informative question in real-time is computationally intensiv
 
 ## Outline of Wiki
 
-For more information on how to set up and run your own BACE application, please see the [BACE WiKi](https://github.com/mhdrake/bace/wiki).
+For more information on how to set up and run your own BACE application, please see the [BACE WiKi](https://github.com/tt-econ/bace/wiki).
 
 Section 2 walks through an example of how BACE might be used and configured. Within the context of a simple discrete choice example, this section describes how to think through the key model components that a user must specify. Users new to adaptive experimentation can read through this section to understand how a researcher can model a discrete choice experiment using a set of questions or `designs`, prior beliefs over model parameters `thetas`, and a likelihood function that governs how individuals make choices `likelihood_pdf`.
 
@@ -28,3 +28,13 @@ Section 3 provides a walkthrough of how to set up your own BACE application.
 * 3f) Managing Heroku Postgres - This section describes how to manage Heroku Postgres, the database that will record information for users. In particular, we discuss how to think through choosing a Postgres tier and how to change tiers ahead of a full-scale survey if more storage is needed.
 
 Section 4 walks through setting up a survey in Qualtrics that queries your BACE application. 
+
+## References
+
+### Methodology
+
+Drake, Payró, Thakral, and Tô (2022): Bayesian Adaptive Choice Experiments.
+
+### Applications
+
+Drake, Thakral, and Tô (2022): Wage Differentials and the Price of Workplace Flexibility.
