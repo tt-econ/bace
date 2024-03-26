@@ -3,13 +3,16 @@ import json
 import boto3
 
 db_type = 'dynamodb'
-table_name = 'profiles' # Update this if the name of the db table in template.yaml is changed
+table_name = 'bace-db' # Update this if the name of the db table in template.yaml is changed
+# Update table_region below to the region name created by `sam deploy --guided`, saved in the SAM configuration file (samconfig.toml by default)
+#   if different from the default region in ~/.aws/config (or C:\Users\USERNAME\.aws\config)
+table_region = boto3.Session().region_name # example if changed: table_region = 'us-east-2'
 
 # Store database connection
-ddb = boto3.resource(db_type)
+ddb = boto3.resource(db_type, region_name = table_region)
 table = ddb.Table(table_name)
 
-# Functions for convergin output
+# Functions for converting output
 def float_to_decimal(data):
     return json.loads(json.dumps(data), parse_float=Decimal)
 

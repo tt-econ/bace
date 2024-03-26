@@ -1,8 +1,9 @@
-# Number of Questions -> /survey route
-nquestions = 15
+from datetime import datetime, timezone
 
-# Set treatment variables
-def set_treatments(profile, **kwargs):
+# Add variables to user's `profile` (created when `create_profile` route is called)
+def add_to_profile(profile, **kwargs):
+    # example: add timestamp to profile
+    profile['timestamp'] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     return profile
 
 def choice_message(label, price, color, pen_type):
@@ -11,19 +12,19 @@ def choice_message(label, price, color, pen_type):
 
     # Create the HTML table
     html_table = f"""
-        <table style="background-color: lightgray; border-collapse: collapse; border: 1px solid black;">
+        <table width='300px' border='1' cellpadding='1' cellspacing='1' style='font-family: Arial, Tahoma, "Helvetica Neue", Helvetica, sans-serif; border-collapse:collapse; background-color:#eee9e7; color:black;'>
             <tbody>
                 <tr>
-                    <th style="padding: 10px"><b>{label}</b></th>
+                    <th style="text-align: center; background-color: #ded4ce;"><b>{label}</b></th>
                 </tr>
                 <tr>
-                    <td style="padding: 10px; border-top: 1px solid black"><strong>Price:</strong> {price}</td>
+                    <td style="text-align: center;"><em>Price:</em><br> {price}</td>
                 </tr>
                 <tr>
-                    <td style="padding: 10px; border-top: 1px solid black"><strong>Pen Color:</strong> {color}</td>
+                    <td style="text-align: center;"><em>Pen Color:</em><br> {color}</td>
                 </tr>
                 <tr>
-                    <td style="padding: 10px; border-top: 1px solid black"><strong>Pen Type:</strong> {pen_type}</td>
+                    <td style="text-align: center;"><em>Pen Type:</em><br> {pen_type}</td>
                 </tr>
             </tbody>
         </table>
@@ -35,9 +36,9 @@ def convert_design(design, profile, request_data, choice_message=choice_message,
     # Number of questions
     Q = request_data.get('question_number') or len(profile.get('design_history'))
 
-    output = {f'{key}_{Q}': value for key, value in design.items()}
+    output_design = {f'{key}_{Q}': value for key, value in design.items()}
 
-    output[f'message_0_{Q}'] = choice_message("Pen A", design['price_a'], design['color_a'], design['type_a'])
-    output[f'message_1_{Q}'] = choice_message("Pen B", design['price_b'], design['color_b'], design['type_b'])
+    output_design[f'message_0_{Q}'] = choice_message("Pen A", design['price_a'], design['color_a'], design['type_a'])
+    output_design[f'message_1_{Q}'] = choice_message("Pen B", design['price_b'], design['color_b'], design['type_b'])
 
-    return output
+    return output_design

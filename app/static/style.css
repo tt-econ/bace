@@ -1,11 +1,13 @@
-
+/* This is used by Flask but cannot be accessed by AWS Lambda */
+/* If using AWS Lambda: copy the content to the variable css_style from style.py */
 :root {
-  --background-color: #04362c;
-  --box-color: white;
-  --option-color: #90d1c4;
-  --hover-color: #8bbeb9;
-  --alt-color: #83a4d6;
+    --background-color: #04362c;
+    --box-color: #b4c3c0;
+    --option-color: #b4c3c0;
+    --hover-color: #829b96;
+    --alt-color: #688680;
 }
+
 body {
     background-color: var(--background-color);
     font-family: Arial, sans-serif;
@@ -18,10 +20,10 @@ body {
 
 .question-box {
     background-color: var(--box-color);
-    padding: 20px 20px 60px 20px; /* Update this line */
+    padding: 20px 20px 60px 20px;
     width: 80%;
-    min-width: 450px;
-  position: relative;
+    min-width: 700px;
+    position: relative;
 }
 
 .question-text {
@@ -31,7 +33,8 @@ body {
 
 .options {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: center;
     align-items: center;
     width: 90%;
     margin-left: auto;
@@ -43,9 +46,9 @@ body {
     position: relative;
     cursor: pointer;
     user-select: none;
-    width: 100%;
+    width: auto;
     text-align: center;
-    margin-bottom: 10px;
+    margin: 0 10px;
 }
 
 .radio-container input {
@@ -69,7 +72,7 @@ body {
     background-color: var(--hover-color);
 }
 
-.radio-container input:checked ~ .radio-checkmark {
+.radio-container input:checked~.radio-checkmark {
     background-color: var(--alt-color);
 }
 
@@ -85,5 +88,4 @@ body {
     cursor: pointer;
     margin-top: 0px;
     align-self: flex-end;
-    
 }

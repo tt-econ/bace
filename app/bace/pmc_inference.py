@@ -2,14 +2,18 @@ import scipy.stats
 import pandas as pd
 import numpy as np
 
-from bace.bace_utils import sample_thetas
+# Function to sample from the prior distribution
+def sample_thetas(theta_params, N):
+    return pd.DataFrame({
+        key: dist.rvs(size=N) for key, dist in theta_params.items()
+    })
 
 def pmc(theta_params, answer_history, design_history, likelihood_pdf, N, J=5):
 
     # Sample from prior distribution
     old_thetas = sample_thetas(theta_params, N)
     scale = 2 * old_thetas.std()
-    
+
     # Initialize variables to store preference parameters and weights
     pool_thetas = pd.DataFrame()
     w = np.array([])
@@ -19,7 +23,7 @@ def pmc(theta_params, answer_history, design_history, likelihood_pdf, N, J=5):
         # Compute importance weights
         old_thetas, sampled_thetas, weights = importance_sample(old_thetas, theta_params, scale, answer_history, design_history, likelihood_pdf, N)
 
-        # Store sampled points and associated weights 
+        # Store sampled points and associated weights
         pool_thetas = pd.concat([pool_thetas, sampled_thetas], ignore_index=True)
         w = np.append(w, weights)
 
@@ -32,7 +36,7 @@ def pmc(theta_params, answer_history, design_history, likelihood_pdf, N, J=5):
 def importance_sample(old_thetas, theta_params, scale, answer_history, design_history, likelihood_pdf, N=None):
     if N is None:
         N = len(old_thetas)
-    
+
     # Importance sample around existing points.
     new_thetas = pd.DataFrame(
         data = scipy.stats.norm.rvs(size=old_thetas.shape, loc=old_thetas, scale=scale),
@@ -92,7 +96,7 @@ def compute_lklhd_logpdf(thetas, answer_history, design_history, likelihood_pdf)
             log_lklhd[np.isnan(log_lklhd)] = -np.inf
 
         lklhd_logpdf += log_lklhd
-    
+
     return lklhd_logpdf
 
 def systematic_sample(df, weights, N):
@@ -103,7 +107,7 @@ def systematic_sample(df, weights, N):
     # Compute evenly spaced values 1/N apart started from u0 ~ np.random.uniform(0, 1/N)
     u0 = np.random.random()
     u = (u0 + np.arange(N)) / N
-    
+
     # Compute cumulative sum
     cumulative_w = np.cumsum(weights)
     cumulative_w[-1] = 1
