@@ -4,8 +4,11 @@
 .env
 .vs/
 
-app/simulation_output/*
-!app/simulation_output/figures.R
+*.csv
+*.png
+
+tools/simulation/simulation_output/*
+!tools/simulation/simulation_output/figures.R
 
 internal_examples/
 qualtrics/*
