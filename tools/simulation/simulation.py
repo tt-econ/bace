@@ -5,64 +5,36 @@ import random
 from IPython.utils.capture import capture_output
 from mango import Tuner
 
-# Custom Imports
-import bace.bace_utils as bace_utils
-import bace.design_optimization as design_optimization
-import bace.pmc_inference as pmc_inference
-import bace.user_config as user_config
+# For getting parent's module
+import os, sys, importlib
+from pathlib import Path
 
-###############################
-# Specify Simulation Parameters
-
-N_sims = 200 # Number of simulated individuals per optimization type
-N_designs_per_sim = 25 # Number of questions per simulation
-
-###############################
-
-#Simulation Parameters
-sim_params = dict(
-    n_sims=N_sims,
-    size_thetas=user_config.size_thetas,
-    n_designs_per_sim=N_designs_per_sim,
-    max_opt_time=user_config.max_opt_time,
-    theta_params=user_config.theta_params,
-    J=5,
-    file_out='./simulation_output/simulation.csv'
-)
-context = design_optimization.context
-
-def main(sim_params=sim_params):
-
-    # Set seed for random and numpy packages.
-    seed=42
-    random.seed(seed)
-    np.random.seed(seed)
-
+def main(sim_params):
     print("Starting main...")
 
     # Perform simulation
     simulation_output = simulation(
-        sim_params=sim_params, 
+        sim_params=sim_params,
         sim_methods=get_sim_methods()
     )
     simulation_output.to_csv(sim_params["file_out"])
 
 def get_sim_methods():
 
-    config = user_config.conf_dict
-    config['early_stopping'] = design_optimization.early_stop
+    objective = design_optimization.get_objective(user_config.answers, user_config.likelihood_pdf)
+    config = design_optimization.get_conf_dict(user_config.conf_dict)
 
     config_random = config.copy()
     config_random['optimizer'] = 'Random'
 
-    tuner_bace = Tuner(              
+    tuner_bace = Tuner(
         user_config.design_params,
-        design_optimization.objective,
+        objective,
         config
     )
-    tuner_rand = Tuner(              
+    tuner_rand = Tuner(
         user_config.design_params,
-        design_optimization.objective,
+        objective,
         config_random
     )
 
@@ -74,7 +46,7 @@ def get_sim_methods():
             random_design=False,
             design_tuner=tuner_bace
         ),
-        # Random search 
+        # Random search
         # dict(
         #     opt_type="BACE",
         #     search_type="random",
@@ -102,25 +74,25 @@ def simulation(sim_params, sim_methods):
 
 
         # Sample true thetas from prior distribution
-        true_theta = bace_utils.sample_thetas(
+        true_theta = pmc_inference.sample_thetas(
             sim_params.get('theta_params'),
             1
         )
 
         # Create dataframe of true values with sim_params["n_designs_per_sim"] rows.
         true_thetas = pd.concat(
-            [true_theta] * sim_params.get('n_designs_per_sim'), 
+            [true_theta] * sim_params.get('n_designs_per_sim'),
             ignore_index=True
         )
 
+        context = sim_params.get('context')
         # Initialize empty arrays to store information for sim_no
         for method in sim_methods:
-
             context.start_time = None
             context.thetas = None
 
             # Sample thetas to form prior distribution
-            thetas = bace_utils.sample_thetas(
+            thetas = pmc_inference.sample_thetas(
                 sim_params.get('theta_params'),
                 sim_params.get('size_thetas')
             )
@@ -144,9 +116,9 @@ def simulation(sim_params, sim_methods):
 
                 # Evaluate observed and true answers
                 observed_answer, true_answer = get_answers(
-                    answers=user_config.answers, 
-                    true_theta=true_theta, 
-                    design=next_design, 
+                    answers=user_config.answers,
+                    true_theta=true_theta,
+                    design=next_design,
                     likelihood_pdf=user_config.likelihood_pdf
                 )
 
@@ -163,7 +135,7 @@ def simulation(sim_params, sim_methods):
                     N=sim_params.get('size_thetas'),
                     J=sim_params.get('J')
                 )
-                                                    
+
                 # Record end time for round j.
                 end_round = time.time()
 
@@ -175,7 +147,7 @@ def simulation(sim_params, sim_methods):
                 true_answers.append(true_answer)
                 time_history.append(end_round - start_round)
                 estimate_history = pd.concat([estimate_history, estimates], ignore_index=True)
-       
+
             # Combine information for simulation round into single DataFrame
             round_df = combine_round_info(true_thetas, round_no, observed_answers, true_answers, time_history, method, design_history, estimate_history)
             round_df["sim_no"] = i
@@ -188,7 +160,7 @@ def simulation(sim_params, sim_methods):
 
             print(f"Finished round {i+1} of {sim_params['n_sims'] * len(sim_methods)}. Avg. Time per QuestionRound Time: {np.mean(time_history)}s.")
             i += 1
-    
+
     print_estimates(output, user_config.theta_params)
 
     return output
@@ -272,6 +244,58 @@ def mean_estimates(thetas):
 
     return thetas
 
-if __name__ == '__main__':
-    main()
+def import_parents(level=1):
+    global __package__
+    file = Path(os.path.abspath('')).resolve()
+    parent, top = file.parent, file.parents[level - 1]
+
+    sys.path.append(str(top))
+    try:
+        sys.path.remove(str(parent))
+    except ValueError: # already removed
+        pass
+
+    __package__ = '.'.join(parent.parts[len(top.parts):])
+    importlib.import_module(__package__) # won't be needed after that
+
+if __name__ == '__main__' and __package__ is None:
+
+    import_parents(level=2)
+
+    # BACE Imports
+    import app.bace.pmc_inference as pmc_inference
+    import app.bace.user_config as user_config
+    import app.bace.design_optimization as design_optimization
+
+    ###############################
+    # Specify Simulation Parameters
+
+    N_sims = 200 # Number of simulated individuals per optimization type
+    N_designs_per_sim = 25 # Number of questions per simulation
+
+    ###############################
+
+    # Set true_params distributions to draw from, default to the prior
+    true_params = user_config.theta_params
+
+    context = design_optimization.context
+
+    # Simulation Parameters
+    sim_params = dict(
+        n_sims=N_sims,
+        size_thetas=user_config.size_thetas,
+        n_designs_per_sim=N_designs_per_sim,
+        theta_params=user_config.theta_params,
+        true_params=true_params,
+        J=5,
+        context = context,
+        file_out='./simulation_output/simulation.csv'
+    )
+
+    # Set seed for random and numpy packages.
+    seed = 42
+    random.seed(seed)
+    np.random.seed(seed)
+
+    main(sim_params=sim_params)
     print('Finished simulation')
