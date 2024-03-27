@@ -7,26 +7,25 @@ Globals:
     MemorySize: 1028 # Specify memory (in Mb) allocated to your function.
 
 Resources:
-
   DynamoDBTable:
     Type: AWS::DynamoDB::Table
     # Policies to help avoid accidental database deletion.
     UpdateReplacePolicy: Retain #Retain table if table name is changed rather than delete. See https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-updatereplacepolicy.html
     DeletionPolicy: Retain # Retain table on sam delete. https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-deletionpolicy.html
     Properties:
-      TableName: profiles # If changed, update `table_name` in app/database/db.py
-      AttributeDefinitions: 
+      TableName: bace-db # If changed, update `table_name` in app/database/db.py
+      AttributeDefinitions:
         -
           AttributeName: profile_id
           AttributeType: S
-      KeySchema: 
+      KeySchema:
         -
           AttributeName: profile_id
           KeyType: HASH
-      ProvisionedThroughput: 
+      ProvisionedThroughput:
         ReadCapacityUnits: 24
         WriteCapacityUnits: 24
-  
+
   BaceFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -77,7 +76,6 @@ Resources:
           Properties:
             Path: /survey
             Method: post
-            
     Metadata:
       Dockerfile: Dockerfile
       DockerContext: ./app
