@@ -39,4 +39,4 @@ We welcome any comments or interest in contributing to further develop the packa
 
 ## Instructions
 
-BACE users are referred to the package's [Manual](https://github.com/tt-econ/bace/wiki).
+BACE users are referred to the package's [Manual](https://tt-econ.github.io/BACE).
