@@ -47,19 +47,15 @@ def likelihood_pdf(answer, thetas,
     r=1
     u1 = ces(x1, y1, thetas['r'])
     u2 = ces(x2, y2, thetas['r'])
-    p = 1
-
-    utility_diff = u2 - u1
     p = 0.98
 
-    utility_diff = u2 - u1
-   
+    base_utility_diff = u2 - u1
+
     # Choose higher utility option with probability p. Randomly otherwise.
-    u = utility_diff>0
-    u[utility_diff==0] = 1/2
-    likelihood = u*p + (1/2) * (1-p)
+    base_utility_higher = (base_utility_diff>0) * 1 + (base_utility_diff==0) * 0.5
+    likelihood = base_utility_higher * p + (1/2) * (1-p)
 
     if str(answer)=='1':
-        return likelihood.astype(float)
+        return likelihood
     else:
-        return (1-likelihood).astype(float)
+        return (1 - likelihood)
