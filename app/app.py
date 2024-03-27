@@ -23,7 +23,7 @@ from utils.app_utils import format_response, get_request
 
 # Specify application. Change if deploying via Lambda or directly as a Flask application.
 app = FlaskLambda(__name__)     # Uncomment if deploying via AWS Lambda.
-#app = Flask(__name__)          # Uncomment if deploying directly as standard Flask application.
+# app = Flask(__name__)          # Uncomment if deploying directly as standard Flask application.
 
 @app.errorhandler(Exception)
 def handle_exception(e):
@@ -49,14 +49,15 @@ sys.path.append(os.path.join(os.path.dirname(__file__)))
 def homepage():
     return format_response({ 'message': 'Hello! Your BACE application is up and running.', 'author': f"{author or 'Update author in bace/user_config.py'}"})
 
+# Set up the optimization tuner using parameters from user_config
 context.max_opt_time = max_opt_time
+conf_dict_earlystop = get_conf_dict(conf_dict)
+objective = get_objective(answers, likelihood_pdf)
+design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
 
 # Return a random design
 @app.route('/random_design', methods=['GET'])
 def random_design():
-    conf_dict_earlystop = get_conf_dict(conf_dict)
-    objective = get_objective(answers, likelihood_pdf)
-    design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
     design = design_tuner.ds.get_random_sample(size=1)[0]
     return format_response(design)
 
@@ -70,9 +71,6 @@ def create_profile():
     profile = add_to_profile(profile)
 
     # Select first design
-    conf_dict_earlystop = get_conf_dict(conf_dict)
-    objective = get_objective(answers, likelihood_pdf)
-    design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
     next_design = get_next_design(sample_thetas(theta_params, size_thetas), design_tuner)
 
     # Add next_design to design history and store placeholder for answer_history
@@ -100,9 +98,6 @@ def update_profile():
     request_data = get_request(request)
     print(request_data)
 
-    conf_dict_earlystop = get_conf_dict(conf_dict)
-    objective = get_objective(answers, likelihood_pdf)
-    design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
 
     # If profile_id is present, proceed
     if request_data.get('profile_id') != "${e://Field/profile_id}":
@@ -202,9 +197,6 @@ def update_estimates():
 def survey():
 
     css_style_markup = Markup(f'<style>{css_style}</style>')
-    conf_dict_earlystop = get_conf_dict(conf_dict)
-    objective = get_objective(answers, likelihood_pdf)
-    design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
 
     if request.method == 'GET':
         return render_template('instructions.html', redirect_url='survey', css_style=css_style_markup)
