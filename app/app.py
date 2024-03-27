@@ -1,6 +1,6 @@
 # Requirements
-from flask_lambda import FlaskLambda
-from flask import request, render_template, url_for, Markup
+from flask import request, render_template, url_for, Flask
+from markupsafe import Markup
 import uuid
 import sys
 import os
@@ -15,11 +15,15 @@ from bace.user_convert import add_to_profile, convert_design
 from bace.user_survey import nquestions, display_estimates
 from static.style import css_style
 
-from decimal import Decimal
-import json
+# Prepare application for Lambda environment
+from utils.flask_lambda.flask_lambda import FlaskLambda
 
-# Specify application
-app = FlaskLambda(__name__)
+# Helper functions for app.py
+from utils.app_utils import format_response, get_request
+
+# Specify application. Change if deploying via Lambda or directly as a Flask application.
+app = FlaskLambda(__name__)     # Uncomment if deploying via AWS Lambda.
+#app = Flask(__name__)          # Uncomment if deploying directly as standard Flask application.
 
 @app.errorhandler(Exception)
 def handle_exception(e):
@@ -94,7 +98,6 @@ def update_profile():
 
     # Store profile specific information
     request_data = get_request(request)
-
     print(request_data)
 
     conf_dict_earlystop = get_conf_dict(conf_dict)
@@ -209,7 +212,6 @@ def survey():
 
         # Store body of request
         profile = get_request(request)
-        print(profile)
 
         if profile.get('profile_id'):
 
@@ -305,28 +307,5 @@ def survey():
 
             return render_template('survey.html', output_design=output_design, inputs=inputs, question_number=1, nquestions=nquestions, redirect_url='survey', css_style=css_style_markup)
 
-# Utilities used by app.py
-# Update JSONEncoder to handle dynamodb decimal type
-class DecimalEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, Decimal):
-            return str(obj)
-        return json.JSONEncoder.default(self, obj)
-
-# Format response to encode output as json
-def format_response(data, code=200, content_type={'Content-Type': 'application/json'}):
-    return json.dumps(data, cls=DecimalEncoder), code, content_type
-
-# Get parameters from web request
-def get_request(request):
-
-    content_type = request.headers.get('Content-Type')
-    if request.method=='GET':
-        output = request.args
-    else:
-        if (content_type == 'application/json'):
-            output = request.get_json()
-        else:
-            output = request.form.to_dict()
-
-    return output
+if __name__ == "__main__":
+    app.run()

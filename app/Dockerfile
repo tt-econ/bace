@@ -5,6 +5,7 @@ COPY bace ./bace
 COPY database ./database
 COPY templates ./templates
 COPY static ./static
+COPY utils ./utils
 # If you add additional folders, make sure to save them to the Docker image.
 
 RUN python3.9 -m pip install --upgrade pip
