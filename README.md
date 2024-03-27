@@ -20,7 +20,7 @@ Example output from the BACE package template:
 
 You can either use the AWS-hosted BACE application as in the example above, or integrate it with platforms such as Qualtrics and SurveyCTO:
 
-- A Qualtrics integration of the BACE application: <https://bostonu.qualtrics.com/jfe/form/SV_5iONxtWJU5tXMYS>
+- A Qualtrics integration of the BACE application using the provided Qualtrics template: <https://bostonu.qualtrics.com/jfe/form/SV_5iONxtWJU5tXMYS>
 
 ## Attribution
 
@@ -39,4 +39,4 @@ We welcome any comments or interest in contributing to further develop the packa
 
 ## Instructions
 
-BACE users are referred to the package's [Manual](https://tt-econ.github.io/BACE).
+BACE users are referred to the package's [Manual](https://tt-econ.github.io/BACE/index.html).
