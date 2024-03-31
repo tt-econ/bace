@@ -20,9 +20,18 @@ def get_request(request):
 
     if request.method == 'GET':
         output = request.args
-    elif content_type == 'application/json':
-        output = request.get_json()
-    elif content_type in ['application/x-www-form-urlencoded', 'multipart/form-data']:
-        output = request.form.to_dict()
+    else:
+        if content_type == 'application/json':
+            output = request.get_json()
+        else:
+            output = request.form.to_dict()
 
     return output
+
+# Function to check if the 'answer' key is empty (where empty means no value, None, or an empty string)
+def is_answer_empty(answer):
+    # Check if 'answer' is None or an empty string
+    if answer is None or (isinstance(answer, str) and answer.strip() == ''):
+        return True
+    # For all other cases, 'answer' is not empty
+    return False
