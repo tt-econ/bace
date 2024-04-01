@@ -244,7 +244,7 @@ def survey():
 
                 inputs = {'profile_id': profile['profile_id']}
 
-                return render_template('survey.html', output_design=output_design, inputs=inputs, question_number=len(profile.get("design_history")), nquestions=nquestions, redirect_url='survey', css_style=css_style_markup)
+                return render_template('survey.html', output_design=output_design, inputs=inputs, answer_values = answers, question_number=len(profile.get("design_history")), nquestions=nquestions, redirect_url='survey', css_style=css_style_markup)
 
             else:
 
@@ -295,7 +295,7 @@ def survey():
             inputs = {'profile_id': profile['profile_id']}
 
 
-            return render_template('survey.html', output_design=output_design, inputs=inputs, question_number=1, nquestions=nquestions, redirect_url='survey', css_style=css_style_markup)
+            return render_template('survey.html', output_design=output_design, inputs=inputs, answer_values = answers, question_number=1, nquestions=nquestions, redirect_url='survey', css_style=css_style_markup)
 
 if __name__ == "__main__":
     app.run()

@@ -19,10 +19,12 @@
             <p class="question-text">Question {{ question_number }} of {{ nquestions }}:</p>
             <p>The two options below are identical in all aspects except those that are displayed. Which option do you prefer?</p>
             <div class="options">
-                <label class="radio-container"><input type="radio" name="answer" value="0"><span
-                    class="radio-checkmark">{{ output_design["message_0_survey"] | safe }}</span></label>
-                <label class="radio-container"><input type="radio" name="answer" value="1"><span
-                    class="radio-checkmark">{{ output_design["message_1_survey"] | safe }}</span></label>
+                {% for answer_val in answer_values %}
+                <label class="radio-container">
+                    <input type="radio" name="answer" value="{{ answer_val }}">
+                    <span class="radio-checkmark">{{ output_design['message_' ~ answer_val ~ '_survey'] | safe }}</span>
+                </label>
+                {% endfor %}
             </div>
             <button id="next-button" type="submit" disabled>&rarr;</button>
         </div>
