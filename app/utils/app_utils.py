@@ -10,8 +10,26 @@ class DecimalEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 # Format response to encode output as json
-def format_response(data, code=200, content_type={'Content-Type': 'application/json'}):
-    return json.dumps(data, cls=DecimalEncoder), code, content_type
+def format_response(data, allow_CORS=False):
+
+    if allow_CORS:
+        headers = {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+        }
+    else:
+        headers = {
+            'Content-Type': 'application/json',
+        }
+
+    response = (
+        json.dumps(data, cls=DecimalEncoder),
+        200,
+        headers
+    )
+    return response
 
 # Get parameters from web request
 def get_request(request):
