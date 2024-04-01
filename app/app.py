@@ -12,7 +12,7 @@ from database.db import table, update_db_item, float_to_decimal, decimal_to_floa
 from bace.design_optimization import get_design_tuner, get_next_design, get_conf_dict, get_objective, context
 from bace.pmc_inference import pmc, sample_thetas
 from bace.user_config import answers, design_params, theta_params, likelihood_pdf, author, size_thetas, conf_dict, max_opt_time
-from bace.user_convert import add_to_profile, convert_design
+from bace.user_convert import add_to_profile, convert_design, convert_design_surveycto, convert_dict_to_string
 from bace.user_survey import nquestions, display_estimates
 from static.style import css_style
 
@@ -294,8 +294,156 @@ def survey():
 
             inputs = {'profile_id': profile['profile_id']}
 
-
             return render_template('survey.html', output_design=output_design, inputs=inputs, answer_values = answers, question_number=1, nquestions=nquestions, redirect_url='survey', css_style=css_style_markup)
+
+@app.route('/surveyCTO', methods=['GET', 'POST'])
+def surveyCTO():
+
+    # Get data from request
+    request_data = get_request(request)
+    profile_id = request_data.get('profile_id')
+
+    print(f'Working with profile_id: {profile_id}. Request data: {request_data}')
+
+    if request.method == "GET":
+
+        # If GET request, simply return random design.
+        design = design_tuner.ds.get_random_sample(size=1)[0]
+        return format_response(convert_design_surveycto(design, {}, {}), allow_CORS=True)
+    
+    if profile_id:
+
+        # Try to retrieve the item from the database
+        key = {'profile_id': profile_id}
+        response = table.get_item(Key=key)
+
+        if 'Item' in response:
+
+            # Profile exists, process accordingly
+            profile = decimal_to_float(response['Item'])
+
+            # Check if answer is in answers
+            answer = request_data.get('answer')
+            answers_as_string = [str(a) for a in answers]
+
+            if (is_answer_empty(answer) or (str(answer) not in answers_as_string)):
+
+                d_hist = profile.get('design_history')
+                a_hist = profile.get('answer_history')
+
+                # If design history and answer histories are the same length or d_hist is empty, send new design.
+                if (len(d_hist) == len(a_hist)):
+
+                    if len(d_hist) == 0:
+                        # Use new thetas if no designs have been asked.
+                        thetas = sample_thetas(theta_params, size_thetas)
+                    else:
+                        thetas = pmc(theta_params, profile['answer_history'], profile['design_history'], likelihood_pdf, size_thetas)
+
+                    # Select design
+                    next_design = get_next_design(thetas, design_tuner)
+
+                    # Add next_design to design history
+                    profile['design_history'].append(next_design)
+
+                    # Store updates
+                    updates = {
+                        'design_history': profile.get('design_history')
+                    }
+
+                    # Push changes to database
+                    update_db_item(table, key, updates)
+                    next_design = convert_design_surveycto(next_design, profile, profile)
+                    print(f'Received request for prof with no design history. Sending new design.')
+
+                    return format_response(next_design, allow_CORS=True)
+                
+                else:
+
+                    # Return previous design history
+                    prev_design = d_hist[-1]
+                    prev_design = convert_design_surveycto(prev_design, profile, request_data)
+                    return format_response(prev_design, allow_CORS=True)
+
+            # If answer is in answers
+            else:           
+
+                # Update answer history
+                profile['answer_history'].append(answer)
+
+                # Compute pmc to get posterior distribution after answer
+                thetas = pmc(theta_params, profile['answer_history'], profile['design_history'], likelihood_pdf, size_thetas)
+
+                if request_data.get('return_estimates'):
+
+                    # New
+
+                    estimates = thetas.agg(['mean', 'median', 'std']).to_dict()
+
+                    # Store values to be updated
+                    updates = {
+                        'answer_history': profile.get('answer_history'),
+                        'estimates': estimates
+                    }
+
+                    # Push changes to database
+                    update_db_item(table, key, updates)
+
+                    # Convert estimates
+                    formatted_estimates = convert_dict_to_string(estimates)
+                    return format_response({ "estimates": formatted_estimates }, allow_CORS=True)
+                
+                else:            
+
+                    # Compute next design
+                    next_design = get_next_design(thetas, design_tuner)
+
+                    # Update item
+                    profile['design_history'].append(next_design)
+
+                    # Store updates
+                    updates = {
+                        'design_history': profile.get('design_history'),
+                        'answer_history': profile.get('answer_history')
+                    }
+
+                    # Push changes to database
+                    update_db_item(table, key, updates)
+
+                    next_design = convert_design_surveycto(next_design, profile, request_data)
+                    return format_response(next_design, allow_CORS=True)
+
+        else:
+
+            print('Item not found. Creating profile...')
+
+            # Item not present, create a new profile...
+            profile = request_data
+            profile['profile_id'] = profile_id
+            profile = add_to_profile(profile)
+
+            # Select first design
+            next_design = get_next_design(sample_thetas(theta_params, size_thetas), design_tuner)
+
+            # Add next_design to design history and store placeholder for answer_history
+            profile['design_history'] = [next_design]
+            profile['answer_history'] = []
+
+            # Put item into database
+            table.put_item(Item=float_to_decimal(profile))
+            next_design = convert_design_surveycto(next_design, profile, profile)
+
+            print(f'Successfully created profile for {profile.get("survey_id") or profile.get("profile_id")}')
+
+            return format_response(next_design, allow_CORS=True)
+
+    else:
+
+        print('Sending a random design...')
+
+        # If profile_id is not available, return a random design.
+        design = design_tuner.ds.get_random_sample(size=1)[0]
+        return format_response(convert_design_surveycto(design, {}, {}), allow_CORS=True)
 
 if __name__ == "__main__":
     app.run()

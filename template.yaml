@@ -5,6 +5,13 @@ Globals:
   Function:
     Timeout: 600 # Specify time (in s) before function times out.
     MemorySize: 1028 # Specify memory (in Mb) allocated to your function.
+  # Enable CORS for SurveyCTO route. To add CORS to alternate routes, add allow_CORS=True to `format_response` calls in app/app.py
+  Api:
+    Cors:
+      AllowMethods: "'GET,POST,OPTIONS'"
+      AllowHeaders: "'content-type'"
+      AllowOrigin: "'*'"
+      # AllowCredentials: true  Uncomment only if you choose a specific origin instead of the * wildcard.
 
 Resources:
   DynamoDBTable:
@@ -76,6 +83,17 @@ Resources:
           Properties:
             Path: /survey
             Method: post
+        SurveyCTOGet:
+          Type: Api
+          Properties:
+            Path: /surveyCTO
+            Method: get
+        SurveyCTOPost:
+          Type: Api
+          Properties:
+            Path: /surveyCTO
+            Method: post
+
     Metadata:
       Dockerfile: Dockerfile
       DockerContext: ./app
