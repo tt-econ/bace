@@ -20,7 +20,7 @@ from static.style import css_style
 from utils.flask_lambda.flask_lambda import FlaskLambda
 
 # Helper functions for app.py
-from utils.app_utils import format_response, get_request, is_answer_empty
+from utils.app_utils import format_response, get_request, is_empty
 
 # Specify application. Change if deploying via Lambda or directly as a Flask application.
 app = FlaskLambda(__name__)     # Uncomment if deploying via AWS Lambda.
@@ -107,7 +107,7 @@ def update_profile():
         profile = table.get_item(Key=key)['Item']
         profile = decimal_to_float(profile)
 
-        if is_answer_empty(answer):
+        if is_empty(answer):
             next_design = profile['design_history'][-1]
         else:
             profile['answer_history'].append(answer)
@@ -160,7 +160,7 @@ def update_estimates():
 
         else:
 
-            if is_answer_empty(answer):
+            if is_empty(answer):
                 # Update item
                 profile['answer_history'].append(answer)
             else:
