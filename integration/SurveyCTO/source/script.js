@@ -29,7 +29,6 @@ var buttons_per_row_default = 3;
 var button_label_default = "Choice";
 var profile_enumerator_default = "number"; // "number" or "letter". Defaults to "number"
 var loading_message_default = "Your choice scenario is loading.\nWe appreciate your patience.";
-var answers_default = "0,1";
 
 // Assign Colors
 var DARK_GREY = '#919492'
@@ -48,12 +47,19 @@ const profile_enumerator = getPluginParameter("profile_enumerator") || profile_e
 const loading_message = getPluginParameter("loading_message") || loading_message_default;
 
 // Get answers parameters then store as array.
+function answersArray(n) {
+    let answers_arr = Array.from({length: n}, (_, i) => i);
+    return answers_arr.join(',');
+}
+
+var answers_default = answersArray(n_options);
 let answers_full = getPluginParameter("answers") || answers_default;
 
-console.log('answers')
+console.log('Answers array: ')
 console.log(answers_full);
 
 const answers = answers_full.split(',');
+console.log('Answers:')
 console.log(answers);
 
 /////////////////////////////////
@@ -330,23 +336,37 @@ var already_answered = current_answer != null;
 var this_profile_enumerator = (!final_question) ? profile_enumerator : null;
 var this_button_label = (!final_question) ? button_label : "Estimates";
 
-//addLoadingMessage();
-
+// Headers for HTML request
 const header = { 
     'Accept': 'application/json', 
     'Content-Type': 'application/json' 
 };
 
+// Basic Request data
 var request_data = {
     profile_id: unique_profile_id,
     return_estimates: (final_question) ? 1 : 0
 }
 
+// If first question and add_to_profile_vars is not empty. Add variables to request data
+let add_to_request_vars = getPluginParameter("add_to_request_vars");
+console.log('Add to request');
+console.log(add_to_request_vars);
+if (add_to_request_vars){
+    const request_var_keys = add_to_request_vars.split(',');
+
+    request_var_keys.forEach(k => {
+        request_data[k] = getPluginParameter(k);
+    })
+}
+
+console.log('request data');
+console.log(request_data);
+
 console.log('previous_choice');
 console.log(previous_choice)
 
 if (previous_choice != ""){
-    console.log('Inside. setting choice')
     request_data['answer'] = answers[previous_choice];
 }
 

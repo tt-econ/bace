@@ -326,7 +326,7 @@ def surveyCTO():
             answer = request_data.get('answer')
             answers_as_string = [str(a) for a in answers]
 
-            if (is_answer_empty(answer) or (str(answer) not in answers_as_string)):
+            if (is_empty(answer) or (str(answer) not in answers_as_string)):
 
                 d_hist = profile.get('design_history')
                 a_hist = profile.get('answer_history')
