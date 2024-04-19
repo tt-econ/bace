@@ -161,8 +161,6 @@ def update_estimates():
             if is_empty(answer):
                 profile['design_history'].pop()
             else:
-                profile['design_history'].pop()
-            else:
                 # Update item
                 profile['answer_history'].append(answer)
 
