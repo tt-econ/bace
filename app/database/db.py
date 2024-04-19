@@ -27,6 +27,7 @@ table_region = boto3.Session().region_name # example if changed: table_region = 
 ############# Option 2) MongoDB Local ########################
 
 # import pymongo
+
 # db_type = "mongodb"
 # mongodb_host = 'local'
 # MONGO_URI = "mongodb://localhost:27017/" # Typical default. Change if hosted at different port on your system.
@@ -38,13 +39,16 @@ table_region = boto3.Session().region_name # example if changed: table_region = 
 
 # db_type = "mongodb"
 # mongodb_host = 'atlas'
-# # (Set username and password as environment variables on the machine/Lambda your function is operating on)
+
+# # (Set username and password as environment variables on the machine/Lambda your function is operating on) or add them here.
 # mongo_username = os.environ.get('mongo_username')
 # mongo_password = os.environ.get('mongo_password')
+# mongo_cluster = os.environ.get('mongo_cluster') # The name of your cluster when setting up MongoDB Atlas
 
-# # Update the connection string.
-# # MongoDB Atlas -> Database -> Connect -> Drivers -> Copy and paste connection string here (fix username and password)
-# MONGO_URI = f"mongodb+srv://{mongo_username}:{mongo_password}@bacecluster0.uukczpf.mongodb.net/?retryWrites=true&w=majority&appName=BaceCluster0"
+
+# # The Mongo URI will be populated with your connection.
+# # Alternatively, Update the connection string directly. MongoDB Atlas -> Database -> Connect -> Drivers -> Copy and paste connection string here. Be careful not to share your passwords.
+# MONGO_URI = f"mongodb+srv://{mongo_username}:{mongo_password}@{mongo_cluster.lower()}.uukczpf.mongodb.net/?retryWrites=true&w=majority&appName={mongo_cluster}"
 
 ##############################################################
 
