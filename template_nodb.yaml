@@ -13,32 +13,32 @@ Globals:
       AllowOrigin: "'*'"
       # AllowCredentials: true  Uncomment only if you choose a specific origin instead of the * wildcard.
 
-Resources:
-  DynamoDBTable:
-    Type: AWS::DynamoDB::Table
-    # Policies to help avoid accidental database deletion.
-    UpdateReplacePolicy: Retain #Retain table if table name is changed rather than delete. See https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-updatereplacepolicy.html
-    DeletionPolicy: Retain # Retain table on sam delete. https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-deletionpolicy.html
-    Properties:
-      TableName: bace-db # If changed, update `table_name` in app/database/db.py
-      AttributeDefinitions:
-        -
-          AttributeName: profile_id
-          AttributeType: S
-      KeySchema:
-        -
-          AttributeName: profile_id
-          KeyType: HASH
-      ProvisionedThroughput:
-        ReadCapacityUnits: 1
-        WriteCapacityUnits: 1
+# Resources:
+#   DynamoDBTable:
+#     Type: AWS::DynamoDB::Table
+#     # Policies to help avoid accidental database deletion.
+#     UpdateReplacePolicy: Retain #Retain table if table name is changed rather than delete. See https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-updatereplacepolicy.html
+#     DeletionPolicy: Retain # Retain table on sam delete. https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-deletionpolicy.html
+#     Properties:
+#       TableName: bace-db # If changed, update `table_name` in app/database/db.py
+#       AttributeDefinitions:
+#         -
+#           AttributeName: profile_id
+#           AttributeType: S
+#       KeySchema:
+#         -
+#           AttributeName: profile_id
+#           KeyType: HASH
+#       ProvisionedThroughput:
+#         ReadCapacityUnits: 1
+#         WriteCapacityUnits: 1
 
   BaceFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref DynamoDBTable
+      # Policies:
+      #   - DynamoDBCrudPolicy:
+      #       TableName: !Ref DynamoDBTable
       PackageType: Image
       Architectures:
         - x86_64

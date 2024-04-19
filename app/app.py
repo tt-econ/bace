@@ -8,7 +8,7 @@ import os
 import json
 
 # Individual imports
-from database.db import table, update_db_item, float_to_decimal, decimal_to_float
+from database.db import table, db_type, create_item, update_item, find_item
 from bace.design_optimization import get_design_tuner, get_next_design, get_conf_dict, get_objective, context
 from bace.pmc_inference import pmc, sample_thetas
 from bace.user_config import answers, design_params, theta_params, likelihood_pdf, author, size_thetas, conf_dict, max_opt_time
@@ -77,7 +77,8 @@ def create_profile():
     profile['answer_history'] = []
 
     # Put item into database
-    table.put_item(Item=float_to_decimal(profile))
+    create_item(table, profile, db_type)
+
     output_design = convert_design(next_design, profile, profile)
 
     print(f'Successfully created profile for {profile.get("survey_id") or profile.get("profile_id")}')
@@ -104,8 +105,7 @@ def update_profile():
         answer=request_data.get('answer')
 
         # Retrieve profile from database
-        profile = table.get_item(Key=key)['Item']
-        profile = decimal_to_float(profile)
+        profile = find_item(table, key, db_type)
 
         if is_empty(answer):
             next_design = profile['design_history'][-1]
@@ -128,7 +128,8 @@ def update_profile():
             }
 
             # Push changes to database
-            update_db_item(table, key, updates)
+            update_item(table, key, updates, db_type)
+
     else:
         # Select random design
         next_design = design_tuner.ds.get_random_sample(size=1)[0]
@@ -149,10 +150,7 @@ def update_estimates():
         answer = data.get('answer')
 
         # Retrieve profile from database
-        profile = table.get_item(Key=key)['Item']
-
-        print('Profile from database')
-        print(profile)
+        profile = find_item(table, key, db_type)
 
         if request.method == 'GET':
 
@@ -161,12 +159,10 @@ def update_estimates():
         else:
 
             if is_empty(answer):
+                profile['design_history'].pop()
+            else:
                 # Update item
                 profile['answer_history'].append(answer)
-            else:
-                profile['design_history'].pop()
-
-            profile = decimal_to_float(profile)
 
             # Calculate estimates
             estimates = pmc(theta_params, profile['answer_history'], profile['design_history'], likelihood_pdf, size_thetas*10, J=10)
@@ -179,7 +175,7 @@ def update_estimates():
             }
 
             # Push changes to database
-            update_db_item(table, key, updates)
+            update_item(table, key, updates, db_type)
 
         return format_response(estimates)
     else:
@@ -213,8 +209,8 @@ def survey():
             answer=request_data.get('answer')
 
             # Retrieve profile from database
-            profile = table.get_item(Key=key)['Item']
-            profile = decimal_to_float(profile)
+            profile = find_item(table, key, db_type)
+
             profile['answer_history'].append(answer)
             print(profile)
 
@@ -236,7 +232,7 @@ def survey():
                 }
 
                 # Push changes to database
-                update_db_item(table, key, updates)
+                update_item(table, key, updates, db_type)
 
                 # Convert Next Design
                 profile['question_number'] = 'survey'
@@ -257,7 +253,7 @@ def survey():
                 }
 
                 # Push changes to database
-                update_db_item(table, key, updates)
+                update_item(table, key, updates, db_type)
 
                 if display_estimates:
                     # calculate the mean and median of the dataframe using agg()
@@ -287,8 +283,9 @@ def survey():
             profile['design_history'] = [next_design]
             profile['answer_history'] = []
 
-            # Put item into database
-            table.put_item(Item=float_to_decimal(profile))
+            # Create Item
+            create_item(table, profile, db_type)
+
             profile['question_number'] = 'survey'
             output_design = convert_design(next_design, profile, profile)
 
@@ -315,13 +312,10 @@ def surveyCTO():
 
         # Try to retrieve the item from the database
         key = {'profile_id': profile_id}
-        response = table.get_item(Key=key)
+        profile = find_item(table, key, db_type)
 
-        if 'Item' in response:
-
+        if profile:
             # Profile exists, process accordingly
-            profile = decimal_to_float(response['Item'])
-
             # Check if answer is in answers
             answer = request_data.get('answer')
             answers_as_string = [str(a) for a in answers]
@@ -352,7 +346,8 @@ def surveyCTO():
                     }
 
                     # Push changes to database
-                    update_db_item(table, key, updates)
+                    update_item(table, key, updates, db_type)
+
                     next_design = convert_design_surveycto(next_design, profile, profile)
                     print(f'Received request for prof with no design history. Sending new design.')
 
@@ -376,8 +371,6 @@ def surveyCTO():
 
                 if request_data.get('return_estimates'):
 
-                    # New
-
                     estimates = thetas.agg(['mean', 'median', 'std']).to_dict()
 
                     # Store values to be updated
@@ -387,7 +380,7 @@ def surveyCTO():
                     }
 
                     # Push changes to database
-                    update_db_item(table, key, updates)
+                    update_item(table, key, updates, db_type)
 
                     # Convert estimates
                     formatted_estimates = convert_dict_to_string(estimates)
@@ -408,7 +401,7 @@ def surveyCTO():
                     }
 
                     # Push changes to database
-                    update_db_item(table, key, updates)
+                    update_item(table, key, updates, db_type)
 
                     next_design = convert_design_surveycto(next_design, profile, request_data)
                     return format_response(next_design, allow_CORS=True)
@@ -429,8 +422,9 @@ def surveyCTO():
             profile['design_history'] = [next_design]
             profile['answer_history'] = []
 
-            # Put item into database
-            table.put_item(Item=float_to_decimal(profile))
+            # Create profile in database
+            create_item(table, profile, db_type)
+            
             next_design = convert_design_surveycto(next_design, profile, profile)
 
             print(f'Successfully created profile for {profile.get("survey_id") or profile.get("profile_id")}')

@@ -24,3 +24,8 @@ urllib3==1.26.18
 pandas==2.2.1
 pytz==2024.1
 tzdata==2024.1
+
+# # MongoDB Requirements. Uncomment if using MongoDB
+# pymongo==4.6.2
+# dnspython==2.6.1
+# certifi==2024.2.2
