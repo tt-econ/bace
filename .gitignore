@@ -2,8 +2,7 @@
 
 
 # Temporarily avoid uploading template.yaml
-template.yaml
-template_nodynamodb.yaml
+./template.yaml
 tools/API_notebooks/*
 
 .aws-sam

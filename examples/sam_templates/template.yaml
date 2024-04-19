@@ -1,0 +1,114 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Globals:
+  Function:
+    Timeout: 600 # Specify time (in s) before function times out.
+    MemorySize: 1028 # Specify memory (in Mb) allocated to your function.
+  # Enable CORS for SurveyCTO route. To add CORS to alternate routes, add allow_CORS=True to `format_response` calls in app/app.py
+  Api:
+    Cors:
+      AllowMethods: "'GET,POST,OPTIONS'"
+      AllowHeaders: "'content-type'"
+      AllowOrigin: "'*'"
+      # AllowCredentials: true  Uncomment only if you choose a specific origin instead of the * wildcard.
+
+Resources:
+  DynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    # Policies to help avoid accidental database deletion.
+    UpdateReplacePolicy: Retain #Retain table if table name is changed rather than delete. See https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-updatereplacepolicy.html
+    DeletionPolicy: Retain # Retain table on sam delete. https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-deletionpolicy.html
+    Properties:
+      TableName: bace-db # If changed, update `table_name` in app/database/db.py
+      AttributeDefinitions:
+        -
+          AttributeName: profile_id
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: profile_id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 24
+        WriteCapacityUnits: 24
+
+  BaceFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DynamoDBTable
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Events:
+        Homepage: # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: Api
+          Properties:
+            Path: /
+            Method: get
+        CreateProfile:
+          Type: Api
+          Properties:
+            Path: /create_profile
+            Method: post
+        UpdateProfile:
+          Type: Api
+          Properties:
+            Path: /update_profile
+            Method: post
+        UpdateEstimates:
+          Type: Api
+          Properties:
+            Path: /estimates
+            Method: post
+        GetEstimates:
+          Type: Api
+          Properties:
+            Path: /estimates
+            Method: get
+        RandomDesign:
+          Type: Api
+          Properties:
+            Path: /random_design
+            Method: get
+        SurveyGet:
+          Type: Api
+          Properties:
+            Path: /survey
+            Method: get
+        SurveyPost:
+          Type: Api
+          Properties:
+            Path: /survey
+            Method: post
+        SurveyCTOGet:
+          Type: Api
+          Properties:
+            Path: /surveyCTO
+            Method: get
+        SurveyCTOPost:
+          Type: Api
+          Properties:
+            Path: /surveyCTO
+            Method: post
+
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./app
+      DockerTag: python3.9-v1
+
+Outputs:
+  # BaceApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  BaceApi:
+    Description: "API Gateway endpoint URL for your BACE function."
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+  BaceFunction:
+    Description: "BACE Lambda Function ARN"
+    Value: !GetAtt BaceFunction.Arn
+  BaceFunctionRole:
+    Description: "Implicit IAM Role created for BACE function"
+    Value: !GetAtt BaceFunctionRole.Arn
