@@ -1,5 +1,6 @@
 # Requirements
 from flask import request, render_template, url_for, Flask
+from werkzeug.exceptions import HTTPException
 from markupsafe import Markup
 import uuid
 import sys
@@ -19,15 +20,14 @@ from static.style import css_style
 from utils.flask_lambda.flask_lambda import FlaskLambda
 
 # Helper functions for app.py
-from utils.app_utils import format_response, get_request
+from utils.app_utils import format_response, get_request, is_answer_empty
 
 # Specify application. Change if deploying via Lambda or directly as a Flask application.
 app = FlaskLambda(__name__)     # Uncomment if deploying via AWS Lambda.
 # app = Flask(__name__)          # Uncomment if deploying directly as standard Flask application.
 
-@app.errorhandler(Exception)
+@app.errorhandler(HTTPException)
 def handle_exception(e):
-    # pass through HTTP errors
     """Return JSON instead of HTML for HTTP errors."""
     # start with the correct headers and status code from the error
     response = e.get_response()
@@ -38,7 +38,6 @@ def handle_exception(e):
         "description": e.description,
     })
     response.content_type = "application/json"
-    print(response)
     return response
 
 # Add file path for relative imports
@@ -98,7 +97,6 @@ def update_profile():
     request_data = get_request(request)
     print(request_data)
 
-
     # If profile_id is present, proceed
     if request_data.get('profile_id') != "${e://Field/profile_id}":
         # Store profile key value and answer
@@ -109,7 +107,7 @@ def update_profile():
         profile = table.get_item(Key=key)['Item']
         profile = decimal_to_float(profile)
 
-        if (not answer) or (answer.isspace()):
+        if is_answer_empty(answer):
             next_design = profile['design_history'][-1]
         else:
             profile['answer_history'].append(answer)
@@ -148,7 +146,7 @@ def update_estimates():
     if data.get('profile_id') != "${e://Field/profile_id}":
 
         key={'profile_id': data.get('profile_id')}
-        answer=data.get('answer')
+        answer = data.get('answer')
 
         # Retrieve profile from database
         profile = table.get_item(Key=key)['Item']
@@ -162,7 +160,7 @@ def update_estimates():
 
         else:
 
-            if (answer) and (not answer.isspace()):
+            if is_answer_empty(answer):
                 # Update item
                 profile['answer_history'].append(answer)
             else:
