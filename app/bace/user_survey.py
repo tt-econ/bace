@@ -1,4 +1,4 @@
-# For /survey route (self-implemented survey directly through AWS)
+# For /survey route (survey implemented within the BACE app with no third-party integration)
 
 # Number of BACE questions
 nquestions = 15
