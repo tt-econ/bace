@@ -161,10 +161,10 @@ def update_estimates():
         else:
 
             if is_empty(answer):
+                profile['design_history'].pop()
+            else:
                 # Update item
                 profile['answer_history'].append(answer)
-            else:
-                profile['design_history'].pop()
 
             profile = decimal_to_float(profile)
 
