@@ -1,7 +1,7 @@
 {
 	"name" : "BACE Integration with SurveyCTO",
 	"author" : "Marshall Drake",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"supportedFieldTypes": ["text"],
 	"hideDefaultRequiredMessage": false,
 	"hideDefaultConstraintMessage": false

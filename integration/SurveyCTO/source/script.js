@@ -16,6 +16,7 @@ const unique_profile_id = getPluginParameter("unique_profile_id");
 const bace_url = getPluginParameter("bace_url");
 const previous_choice = getPluginParameter("previous_choice");
 const final_question = getPluginParameter("final_question") || 0; // Defaults to not being the final question.
+const display_estimates_page = getPluginParameter("display_estimates_page") || 0; // Defaults to not showing the estimates page.
 
 /////////////////////////////////
 // Optional Plug-in Parameters //
@@ -264,7 +265,19 @@ function getNextDesign(bace_url, data, n_options, buttons_per_row, button_label,
 }
 
 // Function to send after final question to update profile and store estimates.
-function getEstimates(bace_url, data) {
+function getEstimates(bace_url, data, display_estimates_page) {
+
+    var display_estimates = parseInt(display_estimates_page) === 1;
+
+    if (display_estimates){
+
+        fieldProperties.LABEL = "Thank you!<br><br>Your estimates will be displayed below."
+
+    } else {
+
+        fieldProperties.LABEL = "Thank you!<br><br>This page will automatically move forward in a moment."
+
+    }
 
     fetch(bace_url, {
         method: 'POST', // HTTP method: POST
@@ -280,8 +293,14 @@ function getEstimates(bace_url, data) {
         console.log(posterior_estimates);
         result_dict['result'] = posterior_estimates;
 
-        createTable('bace_table', posterior_estimates, "Estimates", null);
         setAnswer(posterior_estimates);
+
+        if (display_estimates){
+            createTable('bace_table', posterior_estimates, "Estimates", null);
+        } else {
+            goToNextField(true);
+        }
+
     })
     .catch(error => console.error('Error:', error)); // Adding error handling
 
@@ -409,7 +428,7 @@ else {
     } else {
         // Final questions. Update API and store estimates.
         console.log('Sending final answer and obtaining estimates.');
-        getEstimates(bace_url, request_data);
+        getEstimates(bace_url, request_data, display_estimates_page);
     }
 
 }
