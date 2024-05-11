@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 # Add variables to user's `profile` (created when `create_profile` route is called)
-def add_to_profile(profile, **kwargs):
+def add_to_profile(profile):
     # example: add timestamp to profile
     profile['timestamp'] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     return profile
