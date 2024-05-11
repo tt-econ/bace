@@ -268,14 +268,15 @@ function getNextDesign(bace_url, data, n_options, buttons_per_row, button_label,
 function getEstimates(bace_url, data, display_estimates_page) {
 
     var display_estimates = parseInt(display_estimates_page) === 1;
+    var page_label = document.getElementById("form_label");
 
     if (display_estimates){
 
-        fieldProperties.LABEL = "Thank you!<br><br>Your estimates will be displayed below."
+        page_label.innerHTML = "Thank you!<br><br>Your estimates will be displayed below."
 
     } else {
 
-        fieldProperties.LABEL = "Thank you!<br><br>This page will automatically move forward in a moment."
+        page_label.innerHTML = "Thank you!<br><br>This page will automatically move forward in a moment."
 
     }
 
