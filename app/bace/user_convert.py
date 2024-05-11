@@ -31,9 +31,11 @@ def choice_message(label, price, color, pen_type):
     """
     return html_table
 
-def convert_design(design, profile, request_data, choice_message=choice_message,  **kwargs):
+def convert_design(design, profile, request_data):
     # Function to convert design for output.
-    # Note: To work correctly with the native /survey route, add the html you want to save for each option to output as f'message_{answer_val}_{Q}' where Q will be populated as survey in app/app.py.
+    # Note: To work correctly with the native /survey route,
+    #    add the html you want to save for each option to output
+    #    as f'message_{answer_val}_{Q}' as in the example below.
 
     # Number of questions
     Q = request_data.get('question_number') or len(profile.get('design_history'))

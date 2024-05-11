@@ -1,6 +1,6 @@
 # Survey CTO Integration Functions
 
-def convert_design_surveycto(design, profile, request_data, split_to_rows = "|", split_to_vars = ":", **kwargs):
+def convert_design_surveycto(design, profile, request_data, split_to_rows="|", split_to_vars=":"):
     # Function to convert design for SurveyCTO route.
     # Output produces a single string that captures the design.
     # Rows are separated by split_to_rows (default = "|")
