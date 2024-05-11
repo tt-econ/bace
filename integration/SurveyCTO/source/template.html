@@ -1,0 +1,51 @@
+<!-- Loading Screen -->
+<div id="loadingScreen" style="display: block;">
+  <center>
+    <br>
+    Loading...
+    <div class="loading-symbol"></div>
+    <br>
+  </center>
+</div>
+
+<!-- Main Content  (Hidden by Default)-->
+<div id="mainContent" style="display: none;">
+  <div class="label default-question-text-size" dir="auto">{{{LABEL}}}</div>
+
+  <!-- If there is an image specified in the media:image column, show it here -->
+  {{#MEDIAIMAGE}}
+  <img src="{{MEDIAIMAGE}}" />
+  {{/MEDIAIMAGE}}
+  
+  <!-- If there is audio specified in the media:audio column, show it here -->
+  {{#MEDIAAUDIO}}
+  <audio controls controlsList="nodownload">
+    <source src="{{MEDIAAUDIO}}">
+    Your browser does not support the audio element.
+  </audio>
+  {{/MEDIAAUDIO}}
+  
+  <!-- If there is a video specified in the media:video column, show it here -->
+  {{#MEDIAVIDEO}}
+  <video width="50%" height="*" controls controlsList="nodownload">
+    <source src="{{MEDIAVIDEO}}">
+    Your browser does not support the video tag.
+  </video>
+  {{/MEDIAVIDEO}}
+  
+  <div class="hint default-hint-text-size" dir="auto">{{{HINT}}}</div>
+  
+  <center>
+    <div id="bace_container">
+      <!-- <div id='loadingSymbolDiv'></div> -->
+    </div>
+    <br>
+    <div>
+      <table id="answerButtonsTable">
+      </table>
+    </div>
+  </center>
+</div>
+
+
+

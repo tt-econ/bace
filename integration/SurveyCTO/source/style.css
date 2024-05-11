@@ -1,0 +1,99 @@
+/* Style the tables with class 'bace_table' */
+.bace_table {
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-family: Arial, sans-serif;
+    border: 1px solid #ddd;
+}
+
+/* Style the table header row with navy blue background for 'bace_table' */
+.bace_table th {
+    background-color: #008cba; /* Navy Blue */
+    color: white;
+    text-align: center;
+    padding: 15px;
+    border: 1px solid black;
+}
+
+
+/* Style the table data rows for 'bace_table' */
+.bace_table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+}
+
+/* Style alternating rows for better readability with subtle colors for 'bace_table' */
+.bace_table tr:nth-child(odd) {
+    background-color: #f5f5f5; /* Very subtle gray */
+}
+
+/* Add some padding to the first column of 'bace_table' */
+.bace_table td:first-child {
+    padding-left: 12px;
+}
+
+/* Responsive design for small screens for 'bace_table' */
+@media screen and (max-width: 600px) {
+    .bace_table {
+        font-size: 14px;
+    }
+}
+
+.label {
+    /* add style rules here to change how the label appears */
+    margin: .75rem 0;
+}
+
+.hint {
+    /* add style rules here to change how the hint appears */
+    color: rgba(0,0,0,.65);
+    font-style: italic;
+    margin: .5rem 0;
+}
+
+.response {
+    /* add style rules here to change how the response appears */
+    border: 1px solid #047CC2;
+    box-sizing: border-box;
+    margin: .5rem 0;
+    padding: .5rem;
+    width: 100%;
+}
+
+.is-read-only .response {
+    /* this affects how the input appears when the field is marked read only */
+    background-color: rgba(0,0,0,.07);
+    border: 1px solid rgba(0,0,0,.3);
+    outline: none;
+}
+
+.button {
+    background-color: #008CBA;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer; 
+    display: inline-block;
+    font-size: 16px;
+    margin: 5px;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+}
+
+.loading-symbol {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
