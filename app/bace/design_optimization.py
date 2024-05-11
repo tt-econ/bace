@@ -24,7 +24,7 @@ def early_stop(results):
             return True
     return False
 
-def get_objective(answers, likelihood_pdf):
+def get_objective(answers, likelihood_pdf, profile=None):
     # Specify optimizer
     @scheduler.serial
     def objective(**design):
@@ -32,7 +32,8 @@ def get_objective(answers, likelihood_pdf):
             thetas=context.thetas,
             answers=answers,
             likelihood_pdf=likelihood_pdf,
-            design=design
+            design=design,
+            profile=profile
         )
     return objective
 
@@ -53,7 +54,8 @@ def get_next_design(thetas, tuner):
 def mutual_information(thetas,
                        answers,
                        likelihood_pdf,
-                       design):
+                       design,
+                       profile=None):
     """
     Formula for calculating the mutual information. The utility function we are maximizing when optimizing future designs.
 
@@ -82,7 +84,7 @@ def mutual_information(thetas,
     for answer in answers[:-1]:
 
         # Compute likelihood of observing answer to design given preferences theta
-        likelihood = likelihood_pdf(answer, thetas, design)
+        likelihood = likelihood_pdf(answer, thetas, design, profile)
         # Compute mean
         mean_likelihood = np.mean(likelihood)
 

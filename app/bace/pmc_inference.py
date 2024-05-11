@@ -8,7 +8,7 @@ def sample_thetas(theta_params, N):
         key: dist.rvs(size=N) for key, dist in theta_params.items()
     })
 
-def pmc(theta_params, answer_history, design_history, likelihood_pdf, N, J=5):
+def pmc(theta_params, answer_history, design_history, likelihood_pdf, N, J=5, profile=None):
 
     # Sample from prior distribution
     old_thetas = sample_thetas(theta_params, N)
@@ -21,7 +21,7 @@ def pmc(theta_params, answer_history, design_history, likelihood_pdf, N, J=5):
     for j in range(J):
 
         # Compute importance weights
-        old_thetas, sampled_thetas, weights = importance_sample(old_thetas, theta_params, scale, answer_history, design_history, likelihood_pdf, N)
+        old_thetas, sampled_thetas, weights = importance_sample(old_thetas, theta_params, scale, answer_history, design_history, likelihood_pdf, N, profile)
 
         # Store sampled points and associated weights
         pool_thetas = pd.concat([pool_thetas, sampled_thetas], ignore_index=True)
@@ -33,7 +33,7 @@ def pmc(theta_params, answer_history, design_history, likelihood_pdf, N, J=5):
     # Return sample of size N from full set of samples and weights
     return systematic_sample(pool_thetas, w/np.sum(w), N=N)
 
-def importance_sample(old_thetas, theta_params, scale, answer_history, design_history, likelihood_pdf, N=None):
+def importance_sample(old_thetas, theta_params, scale, answer_history, design_history, likelihood_pdf, N=None, profile=None):
     if N is None:
         N = len(old_thetas)
 
@@ -46,7 +46,7 @@ def importance_sample(old_thetas, theta_params, scale, answer_history, design_hi
     # Compute importance weight components w = pi / q = lklhd * prior / q
     log_q = compute_q_logpdf(new_thetas, old_thetas, scale)
     log_prior = compute_prior_logpdf(new_thetas, theta_params)
-    log_pi = compute_lklhd_logpdf(new_thetas, answer_history, design_history, likelihood_pdf)
+    log_pi = compute_lklhd_logpdf(new_thetas, answer_history, design_history, likelihood_pdf, profile)
 
     # Calculate weights. Use of M is better for numerical stability.
     log_w = log_pi + log_prior - log_q
@@ -73,7 +73,7 @@ def compute_prior_logpdf(thetas, theta_params):
 def compute_q_logpdf(new_thetas, old_thetas, scale):
     return np.sum(scipy.stats.norm.logpdf(new_thetas, loc=old_thetas, scale=scale), axis=1)
 
-def compute_lklhd_logpdf(thetas, answer_history, design_history, likelihood_pdf):
+def compute_lklhd_logpdf(thetas, answer_history, design_history, likelihood_pdf, profile=None):
     """
     Computes the logpdf of the observed answer history given the population of thetas and design_history.
     Inputs:
@@ -89,7 +89,7 @@ def compute_lklhd_logpdf(thetas, answer_history, design_history, likelihood_pdf)
     lklhd_logpdf = 0
     for i in range(ND):
         # Compute p(answer_i | thetas, design_i)
-        lklhd = likelihood_pdf(answer_history[i], thetas, design_history[i])
+        lklhd = likelihood_pdf(answer_history[i], thetas, design_history[i], profile)
 
         with np.errstate(divide='ignore', invalid='ignore'):
             log_lklhd = np.log(lklhd)

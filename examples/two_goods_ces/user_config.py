@@ -41,17 +41,16 @@ def ces(x, y, r):
     return (x ** r + y ** r ) ** (1/r)
 
 # Specify likelihood function
-# Returns Prob(answer | theta, design) for each answer in answers
-def likelihood_pdf(answer, thetas, design, ces=ces):
+# Returns Prob(answer | thetas, design) for each answer in answers
+# Optionally allow for user's profile to be used as an input
+def likelihood_pdf(answer, thetas, design, profile=None):
     u1 = ces(design['x1'], design['y1'], thetas['r'])
     u2 = ces(design['x2'], design['y2'], thetas['r'])
 
     base_utility_diff = u2 - u1
 
-    base_utility_higher = (base_utility_diff > 0) * 1 + (base_utility_diff == 0) * 0.5
-
     # Choose higher utility option with probability p. Randomly otherwise.
-    likelihood = base_utility_higher * thetas['p'] + (1/2) * (1 - thetas['p'])
+    likelihood = (base_utility_diff > 0) * thetas['p'] + (1/2) * (1 - thetas['p'])
 
     eps = 1e-10
     likelihood[likelihood < eps] = eps

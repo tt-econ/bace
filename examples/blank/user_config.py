@@ -35,10 +35,11 @@ design_params = dict(
 )
 
 # Specify likelihood function
-# Returns Prob(answer | theta, design) for each answer in answers (can be in string format from API)
-def likelihood_pdf(answer, thetas, design):
+# Returns Prob(answer | thetas, design) for each answer in answers (can be in string format from API)
+# Optionally allow for user's profile to be used as an input
+def likelihood_pdf(answer, thetas, design, profile=None):
 
     if answer == '1':
-        return 1
+        return 1 - 1e-10
     else:
-        return 0
+        return 1e-10

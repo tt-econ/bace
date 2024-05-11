@@ -49,7 +49,7 @@ design_params    = dict(
 )
 
 # Specify likelihood function
-# Returns Prob(answer | theta, design) for each answer in answers
+# Returns Prob(answer | thetas, design) for each answer in answers
 def likelihood_pdf(answer, thetas, design):
 
     eps = 1e-10

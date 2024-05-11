@@ -52,12 +52,13 @@ def homepage():
 # Set up the optimization tuner using parameters from user_config
 context.max_opt_time = max_opt_time
 conf_dict_earlystop = get_conf_dict(conf_dict)
-objective = get_objective(answers, likelihood_pdf)
-design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
+default_J = 5
 
 # Return a random design
 @app.route('/random_design', methods=['GET'])
 def random_design():
+    objective = get_objective(answers, likelihood_pdf)
+    design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
     design = design_tuner.ds.get_random_sample(size=1)[0]
     return format_response(design)
 
@@ -71,6 +72,8 @@ def create_profile():
     profile = add_to_profile(profile)
 
     # Select first design
+    objective = get_objective(answers, likelihood_pdf, profile)
+    design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
     next_design = get_next_design(sample_thetas(theta_params, size_thetas), design_tuner)
 
     # Add next_design to design history and store placeholder for answer_history
@@ -114,9 +117,11 @@ def update_profile():
             profile['answer_history'].append(answer)
 
             # Compute pmc to get posterior distribution after answer
-            thetas = pmc(theta_params, profile['answer_history'], profile['design_history'], likelihood_pdf, size_thetas)
+            thetas = pmc(theta_params, profile['answer_history'], profile['design_history'], likelihood_pdf, size_thetas, J=default_J, profile=profile)
 
             # Compute next design
+            objective = get_objective(answers, likelihood_pdf, profile)
+            design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
             next_design = get_next_design(thetas, design_tuner)
 
             # Update item
@@ -132,6 +137,8 @@ def update_profile():
             update_db_item(table, key, updates)
     else:
         # Select random design
+        objective = get_objective(answers, likelihood_pdf)
+        design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
         next_design = design_tuner.ds.get_random_sample(size=1)[0]
         profile = dict()
 
@@ -170,7 +177,7 @@ def update_estimates():
             profile = decimal_to_float(profile)
 
             # Calculate estimates
-            estimates = pmc(theta_params, profile['answer_history'], profile['design_history'], likelihood_pdf, size_thetas*10, J=10)
+            estimates = pmc(theta_params, profile['answer_history'], profile['design_history'], likelihood_pdf, size_thetas*10, J=10, profile=profile)
             estimates = estimates.agg(['mean', 'median', 'std']).to_dict()
 
             # Store values to be updated
@@ -220,11 +227,13 @@ def survey():
             print(profile)
 
             # Compute pmc to get posterior distribution after answer
-            thetas = pmc(theta_params, profile['answer_history'], profile['design_history'], likelihood_pdf, size_thetas)
+            thetas = pmc(theta_params, profile['answer_history'], profile['design_history'], likelihood_pdf, size_thetas, J=default_J, profile=profile)
 
             if len(profile['design_history']) + 1 <= nquestions:
 
                 # Compute next design
+                objective = get_objective(answers, likelihood_pdf, profile)
+                design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
                 next_design = get_next_design(thetas, design_tuner)
 
                 # Update item
@@ -282,6 +291,8 @@ def survey():
             profile = add_to_profile(profile)
 
             # Select first design
+            objective = get_objective(answers, likelihood_pdf, profile)
+            design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
             next_design = get_next_design(sample_thetas(theta_params, size_thetas), design_tuner)
 
             # Add next_design to design history and store placeholder for answer_history
@@ -309,6 +320,8 @@ def surveyCTO():
     if request.method == "GET":
 
         # If GET request, simply return random design.
+        objective = get_objective(answers, likelihood_pdf)
+        design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
         design = design_tuner.ds.get_random_sample(size=1)[0]
         return format_response(convert_design_surveycto(design, {}, {}), allow_CORS=True)
 
@@ -339,9 +352,11 @@ def surveyCTO():
                         # Use new thetas if no designs have been asked.
                         thetas = sample_thetas(theta_params, size_thetas)
                     else:
-                        thetas = pmc(theta_params, profile['answer_history'], profile['design_history'], likelihood_pdf, size_thetas)
+                        thetas = pmc(theta_params, profile['answer_history'], profile['design_history'], likelihood_pdf, size_thetas, J=default_J, profile=profile)
 
                     # Select design
+                    objective = get_objective(answers, likelihood_pdf, profile)
+                    design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
                     next_design = get_next_design(thetas, design_tuner)
 
                     # Add next_design to design history
@@ -373,7 +388,7 @@ def surveyCTO():
                 profile['answer_history'].append(answer)
 
                 # Compute pmc to get posterior distribution after answer
-                thetas = pmc(theta_params, profile['answer_history'], profile['design_history'], likelihood_pdf, size_thetas)
+                thetas = pmc(theta_params, profile['answer_history'], profile['design_history'], likelihood_pdf, size_thetas, J=default_J, profile=profile)
 
                 if request_data.get('return_estimates'):
 
@@ -397,6 +412,8 @@ def surveyCTO():
                 else:
 
                     # Compute next design
+                    objective = get_objective(answers, likelihood_pdf, profile)
+                    design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
                     next_design = get_next_design(thetas, design_tuner)
 
                     # Update item
@@ -424,6 +441,8 @@ def surveyCTO():
             profile = add_to_profile(profile)
 
             # Select first design
+            objective = get_objective(answers, likelihood_pdf, profile)
+            design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
             next_design = get_next_design(sample_thetas(theta_params, size_thetas), design_tuner)
 
             # Add next_design to design history and store placeholder for answer_history
@@ -443,6 +462,8 @@ def surveyCTO():
         print('Sending a random design...')
 
         # If profile_id is not available, return a random design.
+        objective = get_objective(answers, likelihood_pdf)
+        design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
         design = design_tuner.ds.get_random_sample(size=1)[0]
         return format_response(convert_design_surveycto(design, {}, {}), allow_CORS=True)
 

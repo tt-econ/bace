@@ -34,7 +34,8 @@ design_params = dict(
 )
 
 # Specify likelihood function
-def likelihood_pdf(answer, thetas, design):
+# Optionally allow for user's profile to be used as an input
+def likelihood_pdf(answer, thetas, design, profile=None):
 
     # Prefer 'a' if x < x1. 'b' if x1 <= x < x2. 'c' if x >= x2
     p = thetas['p']
