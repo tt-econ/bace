@@ -12,8 +12,9 @@ from database.db import table, update_db_item, float_to_decimal, decimal_to_floa
 from bace.design_optimization import get_design_tuner, get_next_design, get_conf_dict, get_objective, context
 from bace.pmc_inference import pmc, sample_thetas
 from bace.user_config import answers, design_params, theta_params, likelihood_pdf, author, size_thetas, conf_dict, max_opt_time
-from bace.user_convert import add_to_profile, convert_design, convert_design_surveycto, convert_dict_to_string
+from bace.user_convert import add_to_profile, convert_design
 from bace.user_survey import nquestions, display_estimates
+from bace.user_surveycto import convert_design_surveycto, convert_dict_to_string
 from static.style import css_style
 
 # Prepare application for Lambda environment
@@ -310,7 +311,7 @@ def surveyCTO():
         # If GET request, simply return random design.
         design = design_tuner.ds.get_random_sample(size=1)[0]
         return format_response(convert_design_surveycto(design, {}, {}), allow_CORS=True)
-    
+
     if profile_id:
 
         # Try to retrieve the item from the database
@@ -357,7 +358,7 @@ def surveyCTO():
                     print(f'Received request for prof with no design history. Sending new design.')
 
                     return format_response(next_design, allow_CORS=True)
-                
+
                 else:
 
                     # Return previous design history
@@ -366,7 +367,7 @@ def surveyCTO():
                     return format_response(prev_design, allow_CORS=True)
 
             # If answer is in answers
-            else:           
+            else:
 
                 # Update answer history
                 profile['answer_history'].append(answer)
@@ -392,8 +393,8 @@ def surveyCTO():
                     # Convert estimates
                     formatted_estimates = convert_dict_to_string(estimates)
                     return format_response({ "estimates": formatted_estimates }, allow_CORS=True)
-                
-                else:            
+
+                else:
 
                     # Compute next design
                     next_design = get_next_design(thetas, design_tuner)
