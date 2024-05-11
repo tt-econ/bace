@@ -36,10 +36,7 @@ design_params = dict(
 
 # Specify likelihood function
 # Returns Prob(answer | theta, design) for each answer in answers (can be in string format from API)
-def likelihood_pdf(answer, thetas,
-                   # All keys in design_params here
-                   # design_continuous, design_discrete
-                   ):
+def likelihood_pdf(answer, thetas, design):
 
     if answer == '1':
         return 1

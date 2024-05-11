@@ -223,7 +223,7 @@ def calculate_next_design(design_tuner, thetas, random_design=False):
 def get_answers(answers, true_theta, design, likelihood_pdf):
 
     # Likelihood of choosing each answer
-    w = [float(likelihood_pdf(answer, true_theta, **design)) for answer in answers]
+    w = [float(likelihood_pdf(answer, true_theta, design)) for answer in answers]
 
     # Select observed answer
     observed_answer = np.random.choice(answers, p=w)

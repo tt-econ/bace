@@ -89,7 +89,7 @@ def compute_lklhd_logpdf(thetas, answer_history, design_history, likelihood_pdf)
     lklhd_logpdf = 0
     for i in range(ND):
         # Compute p(answer_i | thetas, design_i)
-        lklhd = likelihood_pdf(answer_history[i], thetas, **design_history[i])
+        lklhd = likelihood_pdf(answer_history[i], thetas, design_history[i])
 
         with np.errstate(divide='ignore', invalid='ignore'):
             log_lklhd = np.log(lklhd)

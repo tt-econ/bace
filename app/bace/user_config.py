@@ -52,16 +52,12 @@ design_params = dict(
 
 # Specify likelihood function
 # Returns Prob(answer | theta, design) for each answer in answers
-def likelihood_pdf(answer, thetas,
-                   # All keys in design_params here
-                   price_a, price_b,
-                   color_a, color_b,
-                   type_a, type_b):
+def likelihood_pdf(answer, thetas, design):
 
     eps = 1e-10
 
-    base_U_a = -price_a + thetas['blue_ink'] * (color_a == "Blue") + thetas['gel_pen'] * (type_a == 'Gel')
-    base_U_b = -price_b + thetas['blue_ink'] * (color_b == "Blue") + thetas['gel_pen'] * (type_b == 'Gel')
+    base_U_a = - design['price_a'] + thetas['blue_ink'] * (design['color_a'] == 'Blue') + thetas['gel_pen'] * (design['type_a'] == 'Gel')
+    base_U_b = - design['price_b'] + thetas['blue_ink'] * (design['color_b'] == 'Blue') + thetas['gel_pen'] * (design['type_b'] == 'Gel')
     base_utility_diff = base_U_b - base_U_a
 
     # Logit likelihood of choosing B over A with scale parameter thetas['mu']

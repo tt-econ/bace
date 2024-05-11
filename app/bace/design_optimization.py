@@ -32,7 +32,7 @@ def get_objective(answers, likelihood_pdf):
             thetas=context.thetas,
             answers=answers,
             likelihood_pdf=likelihood_pdf,
-            **design
+            design=design
         )
     return objective
 
@@ -53,7 +53,7 @@ def get_next_design(thetas, tuner):
 def mutual_information(thetas,
                        answers,
                        likelihood_pdf,
-                       **design_params):
+                       design):
     """
     Formula for calculating the mutual information. The utility function we are maximizing when optimizing future designs.
 
@@ -82,7 +82,7 @@ def mutual_information(thetas,
     for answer in answers[:-1]:
 
         # Compute likelihood of observing answer to design given preferences theta
-        likelihood = likelihood_pdf(answer, thetas, **design_params)
+        likelihood = likelihood_pdf(answer, thetas, design)
         # Compute mean
         mean_likelihood = np.mean(likelihood)
 

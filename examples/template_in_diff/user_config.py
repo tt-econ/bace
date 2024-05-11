@@ -50,20 +50,20 @@ design_params    = dict(
 
 # Specify likelihood function
 # Returns Prob(answer | theta, design) for each answer in answers
-def likelihood_pdf(answer, thetas,
-                   # All keys in design_params here
-                   price_diff,
-                   color_diff,
-                   type_diff):
+def likelihood_pdf(answer, thetas, design):
 
     eps = 1e-10
 
     # Only utility difference matters
-    # price_diff = price of pen B - price of pen A
-    # color_diff = 1 if pen B is Blue and pen A is Black (and -1 if the opposite); thetas['blue_ink']: utility from having Blue over Black
-    # type_diff = 1 if pen B is Gel and pen A is Ballpoint; thetas['gel_pen']: utility from having Gel over Ballpoint
+    # design['price_diff'] = price of pen B - price of pen A
+    # design['color_diff'] = 1 if pen B is Blue and pen A is Black (and -1 if the opposite); thetas['blue_ink']: utility from having Blue over Black
+    # design['type_diff'] = 1 if pen B is Gel and pen A is Ballpoint; thetas['gel_pen']: utility from having Gel over Ballpoint
 
-    base_utility_diff = -price_diff + thetas['blue_ink'] * color_diff + thetas['gel_pen'] * type_diff
+    base_utility_diff = (
+            - design['price_diff'] +
+            thetas['blue_ink'] * design['color_diff'] +
+            thetas['gel_pen'] * design['type_diff']
+        )
 
     # Logit likelihood of choosing B over A with scale parameter thetas['mu']
     likelihood = 1 / (1 + np.exp(-1 * thetas['mu'] * base_utility_diff))
