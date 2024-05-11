@@ -28,10 +28,8 @@ def get_request(request):
 
     return output
 
-# Function to check if the 'answer' key is empty (where empty means no value, None, or an empty string)
-def is_answer_empty(answer):
-    # Check if 'answer' is None or an empty string
-    if answer is None or (isinstance(answer, str) and answer.strip() == ''):
-        return True
-    # For all other cases, 'answer' is not empty
-    return False
+# Function to check if the 'answer' is empty (where empty means no value, None, or an empty string)
+def is_empty(answer):
+    return(
+        (answer is None) or (str(answer) == "") or (str(answer).isspace())
+    )
