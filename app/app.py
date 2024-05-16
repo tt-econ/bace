@@ -320,10 +320,12 @@ def surveyCTO():
     if request.method == "GET":
 
         # If GET request, simply return random design.
+        profile = dict()
+        profile = add_to_profile(profile)
         objective = get_objective(answers, likelihood_pdf)
         design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
         design = design_tuner.ds.get_random_sample(size=1)[0]
-        return format_response(convert_design_surveycto(design, {}, {}), allow_CORS=True)
+        return format_response(convert_design_surveycto(design, profile, {}), allow_CORS=True)
 
     if profile_id:
 
@@ -370,7 +372,7 @@ def surveyCTO():
                     # Push changes to database
                     update_db_item(table, key, updates)
                     next_design = convert_design_surveycto(next_design, profile, profile)
-                    print(f'Received request for prof with no design history. Sending new design.')
+                    print('Received request for profile with no design history. Sending new design.')
 
                     return format_response(next_design, allow_CORS=True)
 
@@ -462,10 +464,12 @@ def surveyCTO():
         print('Sending a random design...')
 
         # If profile_id is not available, return a random design.
+        profile = dict()
+        profile = add_to_profile(profile)
         objective = get_objective(answers, likelihood_pdf)
         design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
         design = design_tuner.ds.get_random_sample(size=1)[0]
-        return format_response(convert_design_surveycto(design, {}, {}), allow_CORS=True)
+        return format_response(convert_design_surveycto(design, profile, {}), allow_CORS=True)
 
 if __name__ == "__main__":
     app.run()
