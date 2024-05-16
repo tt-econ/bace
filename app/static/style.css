@@ -22,7 +22,7 @@ body {
     background-color: var(--box-color);
     padding: 20px 20px 60px 20px;
     width: 80%;
-    min-width: 700px;
+    min-width: 850px;
     position: relative;
 }
 
