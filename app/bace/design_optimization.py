@@ -9,6 +9,51 @@ class context:
     start_time=None
     thetas=None
 
+# =====================================================================
+# RESERVED ANCHOR ROUNDS  (fix for beta_satellite starvation)
+# ---------------------------------------------------------------------
+# BACE is greedy/one-step (paper Prop 3), so every round the moral params
+# (m0/m1) win the info competition and the assessor contrast is never
+# served -> beta_satellite stays at its prior. On the rounds listed below
+# we OVERRIDE selection and serve a fixed Satellite-vs-clean-Human menu at
+# MATCHED error with no bribe on either side. Then money cancels and
+#     U_sat - U_human = beta_satellite   exactly,
+# i.e. the choice is a pure logit read on beta_satellite. This is the same
+# menu BACE would pick if it were optimising beta_satellite alone (Thm 1),
+# so it's not a hack; and the posterior update downstream is IDENTICAL
+# either way -- it conditions on (design, answer) regardless of how the
+# design was chosen (paper Eq. 2). We only override SELECTION, not inference.
+#
+# ---- SET THESE TWO THINGS ----
+# 1) RESERVED_ROUNDS must match HOW YOUR DRIVER COUNTS rounds. If your caller
+#    passes question_number = len(profile['design_history']), that is
+#    0-INDEXED (first question = 0) -> use e.g. [0, 4, 9].
+#    If it passes a 1-indexed question number -> use [1, 5, 10].
+# 2) Keep it to ~3-4 rounds and spread them out. One early (to seed), the
+#    rest later (after m0/m1 have tightened). Do NOT over-reserve or you
+#    starve the moral parameters instead.
+RESERVED_ROUNDS   = [1, 5]   # <-- edit to match your driver's counter
+ANCHOR_ERROR      = 0.0          # matched error on BOTH sides (cancels). 0 = "correct bill".
+ANCHOR_K          = 1.2          # irrelevant (bribe=0), just a valid value
+
+def _is_reserved(question_number):
+    return question_number is not None and question_number in RESERVED_ROUNDS
+
+def _anchor_menu(question_number, profile=None):
+    # Satellite vs clean Human, matched error, no bribe on either side.
+    # Alternate which SIDE is the satellite across reserved rounds to cancel
+    # any left/right (A/B position) response bias.
+    idx = RESERVED_ROUNDS.index(question_number)
+    sat_on_a = (idx % 2 == 0)
+    a_ass, b_ass = ('Satellite', 'Human') if sat_on_a else ('Human', 'Satellite')
+    return dict(
+        error_a=ANCHOR_ERROR, error_b=ANCHOR_ERROR,
+        bribe_a=0.0,          bribe_b=0.0,
+        k_a=ANCHOR_K,         k_b=ANCHOR_K,
+        assessor_a=a_ass,     assessor_b=b_ass,
+    )
+# =====================================================================
+
 # early_stopping examples: https://github.com/ARM-software/mango/blob/main/examples/EarlyStopping.ipynb
 def early_stop(results):
 
@@ -45,7 +90,16 @@ def get_design_tuner(design_params, objective, conf_dict):
     design_tuner = Tuner(design_params, objective, conf_dict)
     return design_tuner
 
-def get_next_design(thetas, tuner):
+def get_next_design(thetas, tuner, question_number=None, profile=None):
+    # RESERVED-ROUND INTERCEPT: on the listed rounds, serve the fixed assessor
+    # anchor instead of running Bayesian optimization. Returns the same dict
+    # shape as tuner.maximize()['best_params'], so everything downstream
+    # (convert_design, likelihood, PMC update) is unchanged.
+    # Backwards-compatible: if question_number is not passed, behaves exactly
+    # as before (pure adaptive).
+    if _is_reserved(question_number):
+        return _anchor_menu(question_number, profile)
+
     context.start_time=None
     context.thetas=thetas.copy()
     return tuner.maximize()['best_params']

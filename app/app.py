@@ -6,12 +6,14 @@ import uuid
 import sys
 import os
 import json
+import hashlib       
+import numpy as np   
 
 # Individual imports
 from database.db import table, update_db_item, float_to_decimal, decimal_to_float
 from bace.design_optimization import get_design_tuner, get_next_design, get_conf_dict, get_objective, context
 from bace.pmc_inference import pmc, sample_thetas
-from bace.user_config import answers, design_params, theta_params, likelihood_pdf, author, size_thetas, conf_dict, max_opt_time
+from bace.user_config import answers, design_params, theta_params, likelihood_pdf, author, size_thetas, conf_dict, max_opt_time, SEED_DESIGNS
 from bace.user_convert import add_to_profile, convert_design
 from bace.user_survey import nquestions, display_estimates
 from bace.user_surveycto import convert_design_surveycto, convert_dict_to_string
@@ -26,6 +28,10 @@ from utils.app_utils import format_response, get_request, is_empty
 # Specify application. Change if deploying via Lambda or directly as a Flask application.
 app = FlaskLambda(__name__)     # Uncomment if deploying via AWS Lambda.
 # app = Flask(__name__)          # Uncomment if deploying directly as standard Flask application.
+
+def get_pmc_seed(profile_id: str) -> int:
+    """Convert a profile UUID to a stable integer seed for numpy."""
+    return int(hashlib.md5(profile_id.encode()).hexdigest(), 16) % (2**31)
 
 @app.errorhandler(HTTPException)
 def handle_exception(e):
@@ -54,6 +60,15 @@ context.max_opt_time = max_opt_time
 conf_dict_earlystop = get_conf_dict(conf_dict)
 default_J = 5
 
+def choose_next_design(thetas, design_tuner, profile):
+    """First len(SEED_DESIGNS) questions = fixed anchors, then adaptive BACE.
+    Keyed on how many designs this respondent has already been shown, so it is
+    correct at every call site (creation routes have no design_history yet -> 0)."""
+    n_shown = len(profile.get('design_history', []) or [])
+    if n_shown < len(SEED_DESIGNS):
+        return SEED_DESIGNS[n_shown]
+    return get_next_design(thetas, design_tuner)
+
 # Return a random design
 @app.route('/random_design', methods=['GET'])
 def random_design():
@@ -74,7 +89,7 @@ def create_profile():
     # Select first design
     objective = get_objective(answers, likelihood_pdf, profile)
     design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
-    next_design = get_next_design(sample_thetas(theta_params, size_thetas), design_tuner)
+    next_design = choose_next_design(sample_thetas(theta_params, size_thetas), design_tuner,profile)
 
     # Add next_design to design history and store placeholder for answer_history
     profile['design_history'] = [next_design]
@@ -117,12 +132,13 @@ def update_profile():
             profile['answer_history'].append(answer)
 
             # Compute pmc to get posterior distribution after answer
+            np.random.seed(get_pmc_seed(profile['profile_id']))
             thetas = pmc(theta_params, profile['answer_history'], profile['design_history'], likelihood_pdf, size_thetas, J=default_J, profile=profile)
 
             # Compute next design
             objective = get_objective(answers, likelihood_pdf, profile)
             design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
-            next_design = get_next_design(thetas, design_tuner)
+            next_design = choose_next_design(thetas, design_tuner, profile)
 
             # Update item
             profile['design_history'].append(next_design)
@@ -177,13 +193,18 @@ def update_estimates():
             profile = decimal_to_float(profile)
 
             # Calculate estimates
+            np.random.seed(get_pmc_seed(profile['profile_id']))
             estimates = pmc(theta_params, profile['answer_history'], profile['design_history'], likelihood_pdf, size_thetas*10, J=10, profile=profile)
             estimates = estimates.agg(['mean', 'median', 'std']).to_dict()
 
             # Store values to be updated
             updates = {
                 'answer_history': profile.get('answer_history'),
-                'estimates': estimates
+                'estimates': estimates,
+                'pmc_seed': get_pmc_seed(profile['profile_id']),  # log seed
+                'pmc_N': size_thetas * 10,                        # log N
+                'pmc_J': 10,                                       # log J
+
             }
 
             # Push changes to database
@@ -227,6 +248,7 @@ def survey():
             print(profile)
 
             # Compute pmc to get posterior distribution after answer
+            np.random.seed(get_pmc_seed(profile['profile_id']))
             thetas = pmc(theta_params, profile['answer_history'], profile['design_history'], likelihood_pdf, size_thetas, J=default_J, profile=profile)
 
             if len(profile['design_history']) + 1 <= nquestions:
@@ -234,7 +256,7 @@ def survey():
                 # Compute next design
                 objective = get_objective(answers, likelihood_pdf, profile)
                 design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
-                next_design = get_next_design(thetas, design_tuner)
+                next_design = choose_next_design(thetas, design_tuner, profile)
 
                 # Update item
                 profile['design_history'].append(next_design)
@@ -293,7 +315,7 @@ def survey():
             # Select first design
             objective = get_objective(answers, likelihood_pdf, profile)
             design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
-            next_design = get_next_design(sample_thetas(theta_params, size_thetas), design_tuner)
+            next_design = choose_next_design(sample_thetas(theta_params, size_thetas), design_tuner, profile)
 
             # Add next_design to design history and store placeholder for answer_history
             profile['design_history'] = [next_design]
@@ -354,12 +376,13 @@ def surveyCTO():
                         # Use new thetas if no designs have been asked.
                         thetas = sample_thetas(theta_params, size_thetas)
                     else:
+                        np.random.seed(get_pmc_seed(profile['profile_id']))
                         thetas = pmc(theta_params, profile['answer_history'], profile['design_history'], likelihood_pdf, size_thetas, J=default_J, profile=profile)
 
                     # Select design
                     objective = get_objective(answers, likelihood_pdf, profile)
                     design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
-                    next_design = get_next_design(thetas, design_tuner)
+                    next_design = choose_next_design(thetas, design_tuner, profile)
 
                     # Add next_design to design history
                     profile['design_history'].append(next_design)
@@ -390,6 +413,7 @@ def surveyCTO():
                 profile['answer_history'].append(answer)
 
                 # Compute pmc to get posterior distribution after answer
+                np.random.seed(get_pmc_seed(profile['profile_id']))
                 thetas = pmc(theta_params, profile['answer_history'], profile['design_history'], likelihood_pdf, size_thetas, J=default_J, profile=profile)
 
                 if request_data.get('return_estimates'):
@@ -416,7 +440,7 @@ def surveyCTO():
                     # Compute next design
                     objective = get_objective(answers, likelihood_pdf, profile)
                     design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
-                    next_design = get_next_design(thetas, design_tuner)
+                    next_design = choose_next_design(thetas, design_tuner, profile)
 
                     # Update item
                     profile['design_history'].append(next_design)
@@ -445,7 +469,7 @@ def surveyCTO():
             # Select first design
             objective = get_objective(answers, likelihood_pdf, profile)
             design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
-            next_design = get_next_design(sample_thetas(theta_params, size_thetas), design_tuner)
+            next_design = choose_next_design(sample_thetas(theta_params, size_thetas), design_tuner, profile)
 
             # Add next_design to design history and store placeholder for answer_history
             profile['design_history'] = [next_design]

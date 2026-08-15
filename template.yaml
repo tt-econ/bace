@@ -20,7 +20,7 @@ Resources:
     UpdateReplacePolicy: Retain #Retain table if table name is changed rather than delete. See https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-updatereplacepolicy.html
     DeletionPolicy: Retain # Retain table on sam delete. https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-deletionpolicy.html
     Properties:
-      TableName: bace-db # If changed, update `table_name` in app/database/db.py
+      TableName: bace-citizens-db-v2 # If changed, update `table_name` in app/database/db.py
       AttributeDefinitions:
         -
           AttributeName: profile_id
